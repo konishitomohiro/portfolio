@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# portfolio
 
-## Getting Started
+Tomohiro Konishi のポートフォリオサイトです。
 
-First, run the development server:
+- フロントエンド: Next.js (App Router) / React / TypeScript / Tailwind CSS
+- 配信: 静的書き出し (`output: "export"`) を Cloudflare から配信
+- CI/CD: GitHub Actions（PR でチェック、`main` マージで自動デプロイ）
+
+## 開発
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| コマンド | 内容 |
+| --- | --- |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript の型チェック |
+| `npm run build` | 静的サイトを `out/` に書き出す |
+| `npm run preview` | `out/` を Cloudflare と同じ仕組みでローカル確認 |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+表示内容は `src/data/profile.ts` にまとめてあります。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 構成
 
-## Learn More
+```
+ブランチで作業 → PR → CI (lint / typecheck / build) → レビュー → main にマージ
+                                                              ↓
+                                          Deploy ワークフロー → Cloudflare
+```
 
-To learn more about Next.js, take a look at the following resources:
+- `.github/workflows/ci.yml` — PR と `main` への push で lint / 型チェック / ビルド
+- `.github/workflows/deploy.yml` — `main` への push で Cloudflare にデプロイ
+- `wrangler.jsonc` — Cloudflare の配信設定（`out/` を静的アセットとして配信）
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Git ワークフロー
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. `main` から作業ブランチを切る（例: `feat/add-project`, `fix/typo`）
+2. コミットして push し、PR を作成する
+3. CI が通ったことを確認してマージする（`main` には直接 push しない）
+4. マージされると自動で本番にデプロイされる
 
-## Deploy on Vercel
+## デプロイの初期設定
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+GitHub リポジトリの Settings > Secrets and variables > Actions に以下を登録します。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Secret | 内容 |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare の API トークン（テンプレート「Edit Cloudflare Workers」で作成） |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare のアカウント ID |

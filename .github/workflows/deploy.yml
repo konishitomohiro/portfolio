@@ -1,0 +1,39 @@
+# CD: main にマージされたら、ビルドして Cloudflare に自動デプロイする。
+#
+# 必要な GitHub Secrets（Settings > Secrets and variables > Actions）:
+#   CLOUDFLARE_API_TOKEN  ... Cloudflare の API トークン（Workers の編集権限）
+#   CLOUDFLARE_ACCOUNT_ID ... Cloudflare のアカウント ID
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Deploy
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
